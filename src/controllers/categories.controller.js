@@ -1,9 +1,7 @@
 import connection from "../db/db.js";
 import Joi from 'joi';
 
-
-
-const categoriesSchema = Joi.object({
+const categorieSchema = Joi.object({
     name: Joi.string().required().min(1),
 })
 
@@ -13,7 +11,7 @@ async function listCategories (req, res) {
 }
 
 async function createCategorie (req, res) {
-    const validation = categoriesSchema.validate(req.body);
+    const validation = categorieSchema.validate(req.body);
     if (validation.error) {
         const errors = validation.error.details.map(detail => detail.message);
         return res.status(400).send(errors);
