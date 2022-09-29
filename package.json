@@ -1,6 +1,7 @@
 {
   "name": "projeto15-boardcamp",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
