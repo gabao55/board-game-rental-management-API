@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import connection from './db/db.js';
 import categoriesRouter from './routers/categories.router.js';
 import gamesRouter from './routers/games.router.js'
+import customersRouter from './routers/customers.router.js'
 dotenv.config();
 
 const app = express();
@@ -12,6 +13,8 @@ app.use(cors());
 
 app.use(categoriesRouter);
 app.use(gamesRouter);
+app.use(customersRouter);
+
 
 
 app.get('/status', async (req, res) => {
