@@ -11,15 +11,13 @@ const gameSchema = Joi.object({
 
 async function listGames (req, res) {
     const { name } = req.query;
-
-    // TODO: Must use join to get the category name
     
     if (name === undefined) {
-        const allGames = await connection.query('SELECT * FROM games;');
+        const allGames = await connection.query('SELECT games.*, categories.name AS "categoryName" FROM games JOIN categories ON games."categoryId" = categories.id;');
         return res.status(200).send(allGames.rows);
     }
 
-    const queriedGames = await connection.query('SELECT * FROM games WHERE LOWER(name) LIKE LOWER($1);', [`${name}%`]);
+    const queriedGames = await connection.query('SELECT games.*, categories.name AS "categoryName" FROM games JOIN categories ON games."categoryId" = categories.id WHERE LOWER(games.name) LIKE LOWER($1);', [`${name}%`]);
 
     res.status(200).send(queriedGames.rows);
 }
