@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import connection from './db/db.js';
 import categoriesRouter from './routers/categories.router.js';
 import gamesRouter from './routers/games.router.js'
 import customersRouter from './routers/customers.router.js'
+import rentalsRouter from './routers/rentals.router.js';
 dotenv.config();
 
 const app = express();
@@ -14,12 +14,9 @@ app.use(cors());
 app.use(categoriesRouter);
 app.use(gamesRouter);
 app.use(customersRouter);
-
-
+app.use(rentalsRouter);
 
 app.get('/status', async (req, res) => {
-    const test = await connection.query('SELECT * FROM games;');
-    console.log(test.rows);
     res.sendStatus(200);
 });
 
