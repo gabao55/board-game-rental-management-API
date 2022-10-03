@@ -17,10 +17,10 @@ async function createRental (req, res) {
     try {
         const { customerId, gameId, daysRented } = req.body;
         const game = await connection.query('SELECT * FROM games WHERE games.id = $1;', [gameId]);
-        if (!game.rows.length) return res.status(400).send('Game not found');
+        if (!game.rowCount) return res.status(400).send('Game not found');
 
         const customer = await connection.query('SELECT * FROM customers WHERE customers.id = $1;', [customerId]);
-        if (!customer.rows.length) return res.status(400).send('Customer not found');
+        if (!customer.rowCount) return res.status(400).send('Customer not found');
 
         const gameRentals = await connection.query('SELECT * FROM rentals WHERE "gameId" = $1 AND "returnDate" IS NULL;', [gameId]);
         if (game.rows[0].stockTotal - gameRentals.rows.length <= 0) return res.status(400).send('No games left on stock');
@@ -71,7 +71,9 @@ async function listRentals (req, res) {
             gameId: rental.gameId,
             rentDate: `${rental.rentDate.getFullYear()}/${rental.rentDate.getMonth()+1}/${rental.rentDate.getDate()}`,
             daysRented: rental.daysRented,
-            returnDate: rental.returnDate,
+            returnDate: (rental.returnDate) ?
+                `${rental.returnDate.getFullYear()}/${rental.returnDate.getMonth()+1}/${rental.returnDate.getDate()}`:
+                null,
             originalPrice: rental.originalPrice,
             delayFee: rental.delayFee,
             customer: {
@@ -105,7 +107,31 @@ async function deleteRental (req, res) {
 }
 
 async function finishRental (req, res) {
+    const id = parseInt(req.params.id);
 
+    const rental = await connection.query('SELECT rentals.*, games."pricePerDay" FROM rentals JOIN games ON rentals."gameId" = games.id WHERE rentals.id = $1;', [id]);
+    const rentalData = rental.rows[0];
+
+    if (!rental.rowCount) return res.status(404).send('Rental not found');
+
+    if (rentalData.returnDate) return res.status(400).send('Rental already finished');
+
+    const today = new Date();
+    const returnDate = `${today.getFullYear()}/${today.getMonth()+1}/${today.getDate()}`;
+    const miliseconds = 1000;
+    const seconds = 60;
+    const minutes = 60;
+    const hours = 24;
+    const conversionMilisecondsToDay = miliseconds*seconds*minutes*hours;
+
+    const daysDelayed = Math.floor((today - new Date(rentalData.rentDate))/conversionMilisecondsToDay - rentalData.daysRented);
+    const delayFee = (daysDelayed > 0) ? daysDelayed*rentalData.pricePerDay : 0;
+
+    const updateDataArray = [returnDate, delayFee, id];
+
+    connection.query('UPDATE rentals SET "returnDate" = $1, "delayFee" = $2 WHERE id = $3;', updateDataArray);
+
+    res.sendStatus(200);
 }
 
 export { createRental, listRentals, deleteRental, finishRental };
